@@ -154,3 +154,9 @@ Validation Summary:
   ✓ Validated: 70
   ✗ Validation failed: 0
 ```
+
+## Example session uploaded to Garmin Connect
+
+Here' the first session of my plan uploaded to Garmin Connect:
+
+![Example Session](session_image.png)
