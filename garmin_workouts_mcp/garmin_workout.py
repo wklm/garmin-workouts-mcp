@@ -6,7 +6,11 @@ SPORT_TYPE_MAPPING = {
     "running": {"sportTypeId": 1, "sportTypeKey": "running", "displayOrder": 1},
     "cycling": {"sportTypeId": 2, "sportTypeKey": "cycling", "displayOrder": 2},
     "swimming": {"sportTypeId": 4, "sportTypeKey": "swimming", "displayOrder": 5},
-    "strength": {"sportTypeId": 5, "sportTypeKey": "strength_training", "displayOrder": 9},
+    "strength": {
+        "sportTypeId": 5,
+        "sportTypeKey": "strength_training",
+        "displayOrder": 9,
+    },
     "cardio": {"sportTypeId": 6, "sportTypeKey": "cardio_training", "displayOrder": 8},
 }
 
@@ -22,12 +26,36 @@ STEP_TYPE_MAPPING = {
 
 # Target type mapping
 TARGET_TYPE_MAPPING = {
-    "no target": {"workoutTargetTypeId": 1, "workoutTargetTypeKey": "no.target", "displayOrder": 1},
-    "power": {"workoutTargetTypeId": 2, "workoutTargetTypeKey": "power.zone", "displayOrder": 2},
-    "cadence": {"workoutTargetTypeId": 3, "workoutTargetTypeKey": "cadence.zone", "displayOrder": 3},
-    "heart rate": {"workoutTargetTypeId": 4, "workoutTargetTypeKey": "heart.rate.zone", "displayOrder": 4},
-    "speed": {"workoutTargetTypeId": 5, "workoutTargetTypeKey": "speed.zone", "displayOrder": 5},
-    "pace": {"workoutTargetTypeId": 6, "workoutTargetTypeKey": "pace.zone", "displayOrder": 6},
+    "no target": {
+        "workoutTargetTypeId": 1,
+        "workoutTargetTypeKey": "no.target",
+        "displayOrder": 1,
+    },
+    "power": {
+        "workoutTargetTypeId": 2,
+        "workoutTargetTypeKey": "power.zone",
+        "displayOrder": 2,
+    },
+    "cadence": {
+        "workoutTargetTypeId": 3,
+        "workoutTargetTypeKey": "cadence.zone",
+        "displayOrder": 3,
+    },
+    "heart rate": {
+        "workoutTargetTypeId": 4,
+        "workoutTargetTypeKey": "heart.rate.zone",
+        "displayOrder": 4,
+    },
+    "speed": {
+        "workoutTargetTypeId": 5,
+        "workoutTargetTypeKey": "speed.zone",
+        "displayOrder": 5,
+    },
+    "pace": {
+        "workoutTargetTypeId": 6,
+        "workoutTargetTypeKey": "pace.zone",
+        "displayOrder": 6,
+    },
 }
 
 # Distance unit mapping
@@ -39,20 +67,40 @@ DISTANCE_UNIT_MAPPING = {
 
 # End condition type mapping
 END_CONDITION_TYPE_MAPPING = {
-    "time": {"conditionTypeId": 2, "conditionTypeKey": "time", "displayOrder": 2, "displayable": True},
-    "distance": {"conditionTypeId": 3, "conditionTypeKey": "distance", "displayOrder": 3, "displayable": True},
-    "lap.button": {"conditionTypeId": 1, "conditionTypeKey": "lap.button", "displayOrder": 1, "displayable": True},
-    "iterations": {"conditionTypeId": 7, "conditionTypeKey": "iterations", "displayOrder": 7, "displayable": False},
+    "time": {
+        "conditionTypeId": 2,
+        "conditionTypeKey": "time",
+        "displayOrder": 2,
+        "displayable": True,
+    },
+    "distance": {
+        "conditionTypeId": 3,
+        "conditionTypeKey": "distance",
+        "displayOrder": 3,
+        "displayable": True,
+    },
+    "lap.button": {
+        "conditionTypeId": 1,
+        "conditionTypeKey": "lap.button",
+        "displayOrder": 1,
+        "displayable": True,
+    },
+    "iterations": {
+        "conditionTypeId": 7,
+        "conditionTypeKey": "iterations",
+        "displayOrder": 7,
+        "displayable": False,
+    },
 }
 
 # Default pace values in seconds per meter for different sport types
 DEFAULT_PACE = {
-    "running": 0.36,      # ~6:00 min/km or ~9:40 min/mile
-    "cycling": 0.05,      # ~3:00 min/km or ~5:00 min/mile (12 mph)
-    "swimming": 0.5,      # ~8:20 min/100m
-    "walking": 0.3,       # ~5:00 min/km
-    "strength": 0.36,     # Same as running
-    "cardio": 0.36,       # Same as running
+    "running": 0.36,  # ~6:00 min/km or ~9:40 min/mile
+    "cycling": 0.05,  # ~3:00 min/km or ~5:00 min/mile (12 mph)
+    "swimming": 0.5,  # ~8:20 min/100m
+    "walking": 0.3,  # ~5:00 min/km
+    "strength": 0.36,  # Same as running
+    "cardio": 0.36,  # Same as running
 }
 
 
@@ -93,7 +141,9 @@ def make_payload(workout: dict) -> dict:
     step_order = result["stepOrder"]
 
     payload["workoutSegments"].append(segment)
-    payload["estimatedDurationInSecs"] = calculate_estimated_duration(payload["workoutSegments"])
+    payload["estimatedDurationInSecs"] = calculate_estimated_duration(
+        payload["workoutSegments"]
+    )
 
     return payload
 
@@ -150,11 +200,18 @@ def process_step(step: dict, step_order: int) -> dict:
         An object containing the formatted step and updated stepOrder
     """
     # Handle both stepType and endConditionType for identifying repeat steps
-    if (step.get("numberOfIterations") and step.get("steps") and
-        (step.get("stepType") == "repeat" or step.get("endConditionType") == "repeat")):
+    if (
+        step.get("numberOfIterations")
+        and step.get("steps")
+        and (
+            step.get("stepType") == "repeat" or step.get("endConditionType") == "repeat"
+        )
+    ):
         return process_repeat_step(step, step_order)
     elif not step.get("stepType"):
-        raise ValueError(f"Missing stepType for step: {step.get('stepName', 'Unnamed Step')}")
+        raise ValueError(
+            f"Missing stepType for step: {step.get('stepName', 'Unnamed Step')}"
+        )
     else:
         return process_regular_step(step, step_order)
 
@@ -170,7 +227,9 @@ def process_regular_step(step: dict, step_order: int) -> dict:
     Returns:
         An object containing the formatted executable step and updated stepOrder
     """
-    step_type = STEP_TYPE_MAPPING.get(step["stepType"].lower(), STEP_TYPE_MAPPING["interval"])
+    step_type = STEP_TYPE_MAPPING.get(
+        step["stepType"].lower(), STEP_TYPE_MAPPING["interval"]
+    )
 
     workout_step = {
         "stepId": step_order,
@@ -178,30 +237,43 @@ def process_regular_step(step: dict, step_order: int) -> dict:
         "stepType": step_type,
         "type": "ExecutableStepDTO",
         "description": step.get("stepDescription", ""),
-        "stepAudioNote": None
+        "stepAudioNote": None,
     }
 
     # Process end condition (time or distance)
-    if (step.get("endConditionType") == "distance" and
-        step.get("stepDistance") and step.get("distanceUnit")):
+    if (
+        step.get("endConditionType") == "distance"
+        and step.get("stepDistance")
+        and step.get("distanceUnit")
+    ):
         distance_unit = DISTANCE_UNIT_MAPPING.get(step["distanceUnit"].lower())
         if not distance_unit:
             raise ValueError(f"Unsupported distance unit: {step['distanceUnit']}")
 
         workout_step["endCondition"] = END_CONDITION_TYPE_MAPPING["distance"]
-        workout_step["endConditionValue"] = step["stepDistance"] * distance_unit["factor"]  # Convert to meters
+        workout_step["endConditionValue"] = (
+            step["stepDistance"] * distance_unit["factor"]
+        )  # Convert to meters
 
         # When using km for distances >= 1000m, or miles for imperial, make sure
         # the input value is preserved in the native unit rather than being converted
-        if distance_unit["unitKey"] == "km" and workout_step["endConditionValue"] >= 1000:
+        if (
+            distance_unit["unitKey"] == "km"
+            and workout_step["endConditionValue"] >= 1000
+        ):
             workout_step["endConditionValue"] = round(workout_step["endConditionValue"])
         elif distance_unit["unitKey"] == "mile":
             # For miles, preserve the exact conversion factor
             workout_step["endConditionValue"] = step["stepDistance"] * 1609.344
     else:
         # Default to time-based
-        if not isinstance(step.get("stepDuration"), (int, float)) or step["stepDuration"] <= 0:
-            raise ValueError(f"Invalid or missing stepDuration for step: {step.get('stepName', 'Unnamed Step')}")
+        if (
+            not isinstance(step.get("stepDuration"), (int, float))
+            or step["stepDuration"] <= 0
+        ):
+            raise ValueError(
+                f"Invalid or missing stepDuration for step: {step.get('stepName', 'Unnamed Step')}"
+            )
 
         workout_step["endCondition"] = END_CONDITION_TYPE_MAPPING["time"]
         workout_step["endConditionValue"] = step["stepDuration"]  # Duration in seconds
@@ -212,8 +284,10 @@ def process_regular_step(step: dict, step_order: int) -> dict:
         workout_step["targetType"] = TARGET_TYPE_MAPPING["no target"]
 
     # Explicitly set targetValueUnit to null as seen in the valid payload
-    if (workout_step.get("targetType") and
-        workout_step["targetType"]["workoutTargetTypeKey"] != "no.target"):
+    if (
+        workout_step.get("targetType")
+        and workout_step["targetType"]["workoutTargetTypeKey"] != "no.target"
+    ):
         workout_step["targetValueUnit"] = None
 
     step_order += 1
@@ -231,7 +305,10 @@ def process_repeat_step(step: dict, step_order: int) -> dict:
     Returns:
         An object containing the formatted repeat step and updated stepOrder
     """
-    if not isinstance(step.get("numberOfIterations"), int) or step["numberOfIterations"] <= 0:
+    if (
+        not isinstance(step.get("numberOfIterations"), int)
+        or step["numberOfIterations"] <= 0
+    ):
         raise ValueError("Invalid or missing numberOfIterations for repeat step.")
 
     repeat_step = {
@@ -295,7 +372,9 @@ def convert_target_values(step: dict, target_type_key: str) -> dict:
     if isinstance(step["target"]["value"], list):
         min_value, max_value = step["target"]["value"]
     else:
-        min_value, max_value = calculate_value_range(step["target"]["value"], target_type_key)
+        min_value, max_value = calculate_value_range(
+            step["target"]["value"], target_type_key
+        )
 
     target_value_one = convert_value_to_unit(min_value, step["target"].get("unit"))
     target_value_two = convert_value_to_unit(max_value, step["target"].get("unit"))
@@ -371,7 +450,11 @@ def calculate_estimated_duration(workout_segments: List[dict]) -> int:
         The estimated duration of the workout in seconds
     """
     duration = 0
-    sport_type = workout_segments[0]["sportType"]["sportTypeKey"] if workout_segments else "running"
+    sport_type = (
+        workout_segments[0]["sportType"]["sportTypeKey"]
+        if workout_segments
+        else "running"
+    )
 
     for segment in workout_segments:
         for step in segment["workoutSteps"]:
@@ -384,7 +467,9 @@ def calculate_estimated_duration(workout_segments: List[dict]) -> int:
                     duration += step["endConditionValue"]
             elif step["type"] == "RepeatGroupDTO":
                 # Create a fake segment containing just the child steps of the repeat
-                child_steps_duration = calculate_steps_duration(step["workoutSteps"], sport_type)
+                child_steps_duration = calculate_steps_duration(
+                    step["workoutSteps"], sport_type
+                )
                 duration += step["numberOfIterations"] * child_steps_duration
 
     return int(duration)
@@ -410,7 +495,9 @@ def calculate_steps_duration(steps: List[dict], sport_type: str) -> int:
             else:
                 duration += step["endConditionValue"]
         elif step["type"] == "RepeatGroupDTO":
-            child_steps_duration = calculate_steps_duration(step["workoutSteps"], sport_type)
+            child_steps_duration = calculate_steps_duration(
+                step["workoutSteps"], sport_type
+            )
             duration += step["numberOfIterations"] * child_steps_duration
 
     return duration
@@ -430,15 +517,21 @@ def estimate_step_duration(step: dict, sport_type: str) -> int:
     distance = step["endConditionValue"]  # distance in meters
 
     # Check if the step has a pace target
-    if (step.get("targetType") and
-        step["targetType"]["workoutTargetTypeKey"] == "pace.zone" and
-        step.get("targetValueOne") and step.get("targetValueTwo")):
+    if (
+        step.get("targetType")
+        and step["targetType"]["workoutTargetTypeKey"] == "pace.zone"
+        and step.get("targetValueOne")
+        and step.get("targetValueTwo")
+    ):
         # Use the average of min and max pace values
         # targetValueOne and targetValueTwo are in m/s, so we convert to seconds per meter
         pace_per_meter = 2 / (step["targetValueOne"] + step["targetValueTwo"])
-    elif (step.get("targetType") and
-          step["targetType"]["workoutTargetTypeKey"] == "speed.zone" and
-          step.get("targetValueOne") and step.get("targetValueTwo")):
+    elif (
+        step.get("targetType")
+        and step["targetType"]["workoutTargetTypeKey"] == "speed.zone"
+        and step.get("targetValueOne")
+        and step.get("targetValueTwo")
+    ):
         # If speed target, use the average speed in m/s
         avg_speed = (step["targetValueOne"] + step["targetValueTwo"]) / 2
         pace_per_meter = 1 / avg_speed

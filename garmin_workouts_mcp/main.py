@@ -13,18 +13,21 @@ GET_ACTIVITY_WEATHER_ENDPOINT = "/activity-service/activity/{activity_id}/weathe
 LIST_ACTIVITIES_ENDPOINT = "/activitylist-service/activities/search/activities"
 CREATE_WORKOUT_ENDPOINT = "/workout-service/workout"
 SCHEDULE_WORKOUT_ENDPOINT = "/workout-service/schedule/{workout_id}"
-CALENDAR_WEEK_ENDPOINT = "/calendar-service/year/{year}/month/{month}/day/{day}/start/{start}"
+CALENDAR_WEEK_ENDPOINT = (
+    "/calendar-service/year/{year}/month/{month}/day/{day}/start/{start}"
+)
 CALENDAR_MONTH_ENDPOINT = "/calendar-service/year/{year}/month/{month}"
 
 # Set up logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    stream=sys.stderr
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    stream=sys.stderr,
 )
 logger = logging.getLogger(__name__)
 
 mcp = FastMCP(name="GarminConnectWorkoutsServer")
+
 
 @mcp.tool
 def list_workouts() -> dict:
@@ -36,6 +39,7 @@ def list_workouts() -> dict:
     """
     workouts = garth.connectapi(LIST_WORKOUTS_ENDPOINT)
     return {"workouts": workouts}
+
 
 @mcp.tool
 def get_workout(workout_id: str) -> dict:
@@ -52,6 +56,7 @@ def get_workout(workout_id: str) -> dict:
     workout = garth.connectapi(endpoint)
     return {"workout": workout}
 
+
 @mcp.tool
 def get_activity(activity_id: str) -> dict:
     """
@@ -67,8 +72,11 @@ def get_activity(activity_id: str) -> dict:
     activity = garth.connectapi(endpoint)
     return activity
 
+
 @mcp.tool
-def list_activities(limit: int = 20, start: int = 0, activityType: str = None, search: str = None) -> dict:
+def list_activities(
+    limit: int = 20, start: int = 0, activityType: str = None, search: str = None
+) -> dict:
     """
     List activities (completed runs, rides, swims, etc.) from Garmin Connect.
 
@@ -87,10 +95,7 @@ def list_activities(limit: int = 20, start: int = 0, activityType: str = None, s
     Returns:
         A dictionary containing a list of activities and pagination info.
     """
-    params = {
-        "limit": limit,
-        "start": start
-    }
+    params = {"limit": limit, "start": start}
 
     if activityType is not None:
         params["activityType"] = activityType
@@ -100,6 +105,7 @@ def list_activities(limit: int = 20, start: int = 0, activityType: str = None, s
 
     activities = garth.connectapi(LIST_ACTIVITIES_ENDPOINT, "GET", params=params)
     return {"activities": activities}
+
 
 @mcp.tool
 def get_activity_weather(activity_id: str) -> dict:
@@ -115,6 +121,7 @@ def get_activity_weather(activity_id: str) -> dict:
     endpoint = GET_ACTIVITY_WEATHER_ENDPOINT.format(activity_id=activity_id)
     weather = garth.connectapi(endpoint)
     return weather
+
 
 @mcp.tool
 def schedule_workout(workout_id: str, date: str) -> dict:
@@ -151,6 +158,7 @@ def schedule_workout(workout_id: str, date: str) -> dict:
 
     return {"workoutScheduleId": str(workout_scheduled_id)}
 
+
 @mcp.tool
 def delete_workout(workout_id: str) -> bool:
     """
@@ -171,6 +179,7 @@ def delete_workout(workout_id: str) -> bool:
     except Exception as e:
         logger.error("Failed to delete workout %s: %s", workout_id, e)
         return False
+
 
 @mcp.tool
 def upload_workout(workout_data: dict) -> dict:
@@ -197,7 +206,9 @@ def upload_workout(workout_data: dict) -> dict:
         logger.info("Payload to be sent to Garmin Connect: %s", payload)
 
         # Create workout on Garmin Connect
-        result = garth.connectapi("/workout-service/workout", method="POST", json=payload)
+        result = garth.connectapi(
+            "/workout-service/workout", method="POST", json=payload
+        )
 
         # logging the result for debugging
         logger.info("Response from Garmin Connect: %s", result)
@@ -211,6 +222,7 @@ def upload_workout(workout_data: dict) -> dict:
 
     except Exception as e:
         raise Exception(f"Failed to upload workout to Garmin Connect: {str(e)}")
+
 
 @mcp.tool
 def get_calendar(year: int, month: int, day: int = None, start: int = 1) -> dict:
@@ -260,9 +272,7 @@ def get_calendar(year: int, month: int, day: int = None, start: int = 1) -> dict
         view_type = "week"
     else:
         # Monthly view (default)
-        endpoint = CALENDAR_MONTH_ENDPOINT.format(
-            year=year, month=garmin_month
-        )
+        endpoint = CALENDAR_MONTH_ENDPOINT.format(year=year, month=garmin_month)
         view_type = "month"
 
     calendar_data = garth.connectapi(endpoint)
@@ -274,9 +284,10 @@ def get_calendar(year: int, month: int, day: int = None, start: int = 1) -> dict
             "year": year,
             "month": month,
             "day": day,
-            "start": start if day else None
-        }
+            "start": start if day else None,
+        },
     }
+
 
 @mcp.tool
 def generate_workout_data_prompt(description: str) -> dict:
@@ -291,7 +302,8 @@ def generate_workout_data_prompt(description: str) -> dict:
         Prompt for the LLM to generate structured workout data
     """
 
-    return {"prompt": f"""
+    return {
+        "prompt": f"""
     You are a fitness coach.
     Given the following workout description, create a structured JSON object that represents the workout.
     The generated JSON should be compatible with the `upload_workout` tool.
@@ -332,7 +344,9 @@ def generate_workout_data_prompt(description: str) -> dict:
     - For 4:40 min/km pace: "value": 4.67 or "value": [4.5, 4.8]
     - For 160 bpm heart rate: "value": 160 or "value": [150, 170]
     - For no target: "type": "no target", "value": null, "unit": null
-    """}
+    """
+    }
+
 
 def login():
     """Login to Garmin Connect."""
@@ -344,7 +358,9 @@ def login():
         password = os.environ.get("GARMIN_PASSWORD")
 
         if not email or not password:
-            raise ValueError("Garmin email and password must be provided via environment variables (GARMIN_EMAIL, GARMIN_PASSWORD).")
+            raise ValueError(
+                "Garmin email and password must be provided via environment variables (GARMIN_EMAIL, GARMIN_PASSWORD)."
+            )
 
         try:
             garth.login(email, password)
@@ -355,10 +371,12 @@ def login():
         # Save credentials for future use
         garth.save(garth_home)
 
+
 def main():
     """Main entry point for the console script."""
     login()
     mcp.run()
+
 
 if __name__ == "__main__":
     main()
